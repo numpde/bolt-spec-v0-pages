@@ -1,11 +1,11 @@
 (function(root, factory) {
-  const presetApi = typeof module === "object" && module.exports
-    ? require("./boltPresets.js")
+  const yamlApi = typeof module === "object" && module.exports
+    ? require("./yamlParser.js")
     : root;
   const modelApi = typeof module === "object" && module.exports
     ? require("./boltModel.js")
     : root;
-  const api = factory(presetApi, modelApi);
+  const api = factory(yamlApi, modelApi);
 
   if (typeof module === "object" && module.exports) {
     module.exports = api;
@@ -14,8 +14,8 @@
   if (root) {
     Object.assign(root, api);
   }
-})(typeof globalThis !== "undefined" ? globalThis : this, function(presetApi, modelApi) {
-  const { parseSimpleYaml } = presetApi;
+})(typeof globalThis !== "undefined" ? globalThis : this, function(yamlApi, modelApi) {
+  const { parseYamlDocument } = yamlApi;
   const { normalizeBoltSpec } = modelApi;
 
   const BUILTIN_THREAD_STANDARDS_CATALOG = {
@@ -197,7 +197,7 @@
     const path = require("path");
     const yamlPath = path.resolve(__dirname, THREAD_STANDARDS_NODE_PATH);
     const yamlText = fs.readFileSync(yamlPath, "utf8");
-    const catalog = normalizeThreadStandardsCatalog(parseSimpleYaml(yamlText));
+    const catalog = normalizeThreadStandardsCatalog(parseYamlDocument(yamlText));
 
     applyThreadStandardsCatalog(catalog);
     return catalog;
@@ -227,7 +227,7 @@
 
         return response.text();
       })
-      .then((yamlText) => normalizeThreadStandardsCatalog(parseSimpleYaml(yamlText)))
+      .then((yamlText) => normalizeThreadStandardsCatalog(parseYamlDocument(yamlText)))
       .then((catalog) => applyThreadStandardsCatalog(catalog));
 
     return cachedThreadStandardsPromise;

@@ -39,10 +39,16 @@
   <script src="static/vendor/react.development.js"></script>
   <script src="static/vendor/react-dom.development.js"></script>
   <script src="static/vendor/babel.min.js"></script>
+  <script>
+    window.__writeBoltLocalAsset__(
+      '<script src="static/vendor/js-yaml.min.js?v=__BOLT_APP_ASSET_REV__"><\/script>'
+    );
+  </script>
 
   <script>
     [
       "src/utils/boltSchema.js",
+      "src/utils/yamlParser.js",
       "src/utils/clipboard.js",
       "src/utils/boltTableExport.js",
       "src/utils/boltPresets.js",

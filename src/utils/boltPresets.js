@@ -2,7 +2,10 @@
   const schemaApi = typeof module === "object" && module.exports
     ? require("./boltSchema.js")
     : root;
-  const api = factory(schemaApi);
+  const yamlApi = typeof module === "object" && module.exports
+    ? require("./yamlParser.js")
+    : root;
+  const api = factory(schemaApi, yamlApi);
 
   if (typeof module === "object" && module.exports) {
     module.exports = api;
@@ -11,13 +14,14 @@
   if (root) {
     Object.assign(root, api);
   }
-})(typeof globalThis !== "undefined" ? globalThis : this, function(schemaApi) {
+})(typeof globalThis !== "undefined" ? globalThis : this, function(schemaApi, yamlApi) {
   const {
     BOLT_FIELDS,
     BOLT_DIMENSION_FIELDS,
     DEFAULT_EDITABLE_BOLT_SPEC,
     SIZE_FAMILY_FIELD_NAMES,
   } = schemaApi;
+  const { parseYamlDocument } = yamlApi;
   const PRESET_CATALOG_BROWSER_URL = "static/bolt-presets.yaml";
   const PRESET_CATALOG_NODE_PATH = "../../static/bolt-presets.yaml";
   const PRESET_CATALOG_STATE = {
@@ -30,125 +34,7 @@
     value == null ? value : JSON.parse(JSON.stringify(value))
   );
 
-  const parseScalarValue = (rawValue) => {
-    if (rawValue === "true") {
-      return true;
-    }
-
-    if (rawValue === "false") {
-      return false;
-    }
-
-    if (rawValue === "null") {
-      return null;
-    }
-
-    if (/^-?\d+(?:\.\d+)?$/.test(rawValue)) {
-      return Number(rawValue);
-    }
-
-    if (
-      (rawValue.startsWith("\"") && rawValue.endsWith("\"")) ||
-      (rawValue.startsWith("'") && rawValue.endsWith("'"))
-    ) {
-      return rawValue.slice(1, -1);
-    }
-
-    return rawValue;
-  };
-
-  const findNextMeaningfulLine = (lines, startIndex) => {
-    for (let index = startIndex; index < lines.length; index += 1) {
-      const candidate = lines[index];
-      const trimmed = candidate.trim();
-
-      if (!trimmed || trimmed.startsWith("#")) {
-        continue;
-      }
-
-      return {
-        indent: candidate.match(/^ */)[0].length,
-        trimmed,
-      };
-    }
-
-    return null;
-  };
-
-  const parseSimpleYaml = (yamlText) => {
-    const normalizedText = yamlText.replace(/\t/g, "  ");
-    const lines = normalizedText.split(/\r?\n/);
-    const rootValue = {};
-    const stack = [{ indent: -1, type: "object", value: rootValue }];
-
-    lines.forEach((rawLine, lineIndex) => {
-      const trimmed = rawLine.trim();
-
-      if (!trimmed || trimmed.startsWith("#")) {
-        return;
-      }
-
-      const indent = rawLine.match(/^ */)[0].length;
-
-      while (stack.length > 1 && indent <= stack[stack.length - 1].indent) {
-        stack.pop();
-      }
-
-      const parentFrame = stack[stack.length - 1];
-
-      if (trimmed.startsWith("- ")) {
-        if (parentFrame.type !== "array") {
-          throw new Error(`Unexpected list item on line ${lineIndex + 1}`);
-        }
-
-        const rawItemValue = trimmed.slice(2).trim();
-
-        if (!rawItemValue) {
-          throw new Error(`Empty list item on line ${lineIndex + 1}`);
-        }
-
-        parentFrame.value.push(parseScalarValue(rawItemValue));
-        return;
-      }
-
-      if (parentFrame.type !== "object") {
-        throw new Error(`Unexpected mapping entry on line ${lineIndex + 1}`);
-      }
-
-      const separatorIndex = trimmed.indexOf(":");
-
-      if (separatorIndex < 0) {
-        throw new Error(`Invalid YAML mapping on line ${lineIndex + 1}`);
-      }
-
-      const key = trimmed.slice(0, separatorIndex).trim();
-      const rawValue = trimmed.slice(separatorIndex + 1).trim();
-
-      if (!key) {
-        throw new Error(`Empty YAML key on line ${lineIndex + 1}`);
-      }
-
-      if (rawValue) {
-        parentFrame.value[key] = parseScalarValue(rawValue);
-        return;
-      }
-
-      const nextLine = findNextMeaningfulLine(lines, lineIndex + 1);
-      const nextContainerType = nextLine && nextLine.indent > indent && nextLine.trimmed.startsWith("- ")
-        ? "array"
-        : "object";
-      const nextValue = nextContainerType === "array" ? [] : {};
-
-      parentFrame.value[key] = nextValue;
-      stack.push({
-        indent,
-        type: nextContainerType,
-        value: nextValue,
-      });
-    });
-
-    return rootValue;
-  };
+  const parseSimpleYaml = parseYamlDocument;
 
   const normalizePresetCatalog = (parsedCatalog) => {
     const rawPresets = parsedCatalog?.presets;
@@ -319,7 +205,7 @@
     const path = require("path");
     const yamlPath = path.resolve(__dirname, PRESET_CATALOG_NODE_PATH);
     const yamlText = fs.readFileSync(yamlPath, "utf8");
-    const catalog = normalizePresetCatalog(parseSimpleYaml(yamlText));
+    const catalog = normalizePresetCatalog(parseYamlDocument(yamlText));
 
     applyPresetCatalog(catalog);
 
@@ -350,7 +236,7 @@
 
         return response.text();
       })
-      .then((yamlText) => normalizePresetCatalog(parseSimpleYaml(yamlText)))
+      .then((yamlText) => normalizePresetCatalog(parseYamlDocument(yamlText)))
       .then((catalog) => applyPresetCatalog(catalog));
 
     return cachedCatalogPromise;
@@ -372,6 +258,7 @@
     formatBoltSizeTag,
     formatBoltCatalogMeta,
     parseSimpleYaml,
+    parseYamlDocument,
     loadBoltPresetCatalog,
     loadBoltPresetCatalogSync,
   };
