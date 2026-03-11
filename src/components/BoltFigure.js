@@ -1222,7 +1222,6 @@
           window.__BOLT_DRAG_TRACES__ = [trace];
         }
 
-        console.log("Bolt drag trace", trace);
       };
 
       const clearPendingDrag = () => {
