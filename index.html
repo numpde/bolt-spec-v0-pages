@@ -1,0 +1,72 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate" />
+  <meta http-equiv="Pragma" content="no-cache" />
+  <meta http-equiv="Expires" content="0" />
+  <title>Bolt Live App</title>
+  <script>
+    window.__BOLT_APP_ASSET_REV__ = String(Math.floor(Date.now() / 60000));
+
+    window.__writeBoltLocalAsset__ = function(markup) {
+      document.write(markup.replaceAll("__BOLT_APP_ASSET_REV__", window.__BOLT_APP_ASSET_REV__));
+    };
+  </script>
+  <script>
+    window.__writeBoltLocalAsset__(
+      '<script src="src/utils/boltTheme.js?v=__BOLT_APP_ASSET_REV__"><\/script>'
+    );
+  </script>
+  <script>
+    // Inject the selected theme before the stylesheet loads so the page and the
+    // SVG figure start from the same palette without a repaint.
+    window.__BOLT_INITIAL_THEME_KEY__ = window.resolveInitialBoltThemeKey();
+    document.write(
+      `<style>${window.serializeBoltThemeCssVars(window.getBoltThemeByKey(window.__BOLT_INITIAL_THEME_KEY__))}</style>`
+    );
+  </script>
+  <script>
+    window.__writeBoltLocalAsset__(
+      '<link rel="stylesheet" href="src/styles.css?v=__BOLT_APP_ASSET_REV__" />'
+    );
+  </script>
+</head>
+<body>
+  <div id="root"></div>
+
+  <script src="static/vendor/react.development.js"></script>
+  <script src="static/vendor/react-dom.development.js"></script>
+  <script src="static/vendor/babel.min.js"></script>
+
+  <script>
+    [
+      "src/utils/boltSchema.js",
+      "src/utils/clipboard.js",
+      "src/utils/boltTableExport.js",
+      "src/utils/boltPresets.js",
+      "src/utils/boltModel.js",
+      "src/utils/boltConstraints.js",
+      "src/utils/boltStandards.js",
+      "src/utils/checkpointUrl.js",
+      "src/utils/boltSvg.js",
+      "src/utils/boltFigureRenderer.js",
+      "src/utils/boltFigureDownload.js",
+      "src/components/CatalogList.js",
+      "src/components/LikedBoltsCard.js",
+      "src/components/FieldControlTray.js",
+      "src/components/PresetPicker.js",
+      "src/components/ParameterPanel.js",
+      "src/components/BoltFigure.js",
+      "src/components/SpecSummary.js",
+      "src/App.js",
+      "src/index.js",
+    ].forEach((src) => {
+      window.__writeBoltLocalAsset__(
+        `<script type="text/babel" data-presets="react" src="${src}?v=__BOLT_APP_ASSET_REV__"><\/script>`
+      );
+    });
+  </script>
+</body>
+</html>
