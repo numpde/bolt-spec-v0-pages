@@ -40,7 +40,7 @@
       sizeFamily: false,
       options: [
         { value: "Steel", label: "Steel" },
-        { value: "Titatium", label: "Titatium" },
+        { value: "Titanium", label: "Titanium" },
       ],
     },
     nominalDiameterMm: {
