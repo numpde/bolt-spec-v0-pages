@@ -65,6 +65,22 @@
 
     return Math.ceil((value - EPSILON) / stepSize) * stepSize;
   };
+  const parseNumericInput = (rawValue) => {
+    if (rawValue == null) {
+      return null;
+    }
+
+    if (typeof rawValue === "string" && !rawValue.trim()) {
+      return null;
+    }
+
+    const numericValue = Number(rawValue);
+    return Number.isFinite(numericValue) ? numericValue : null;
+  };
+  const resolveNumericInput = (rawValue, fallbackValue) => {
+    const parsedValue = parseNumericInput(rawValue);
+    return parsedValue == null ? fallbackValue : parsedValue;
+  };
   const getThreadedLengthMaxMm = (underHeadLengthMm) => (
     Math.max(0.5, underHeadLengthMm - THREAD_LENGTH_OFFSET_MM)
   );
@@ -94,7 +110,7 @@
   const getHeadDiameterMinMm = (inputSpec = {}) => {
     const headDiameterStepMm = Number(getBoltFieldSchema("headDiameterMm")?.step) || 0;
     const nominalDiameterMm = clamp(
-      Number(inputSpec.nominalDiameterMm) || getFieldDefault("nominalDiameterMm"),
+      resolveNumericInput(inputSpec.nominalDiameterMm, getFieldDefault("nominalDiameterMm")),
       getFieldMin("nominalDiameterMm"),
       40
     );
@@ -112,43 +128,46 @@
     const material = getEnumValue("material", inputSpec.material);
     const socket = getEnumValue("socket", inputSpec.socket || inputSpec.driveLabel);
     const nominalDiameterMm = clamp(
-      Number(inputSpec.nominalDiameterMm) || getFieldDefault("nominalDiameterMm"),
+      resolveNumericInput(inputSpec.nominalDiameterMm, getFieldDefault("nominalDiameterMm")),
       getFieldMin("nominalDiameterMm"),
       40
     );
     const underHeadLengthMm = clamp(
-      Number(inputSpec.underHeadLengthMm) || getFieldDefault("underHeadLengthMm"),
+      resolveNumericInput(inputSpec.underHeadLengthMm, getFieldDefault("underHeadLengthMm")),
       getFieldMin("underHeadLengthMm"),
       200
     );
     const threadedLengthMaxMm = getThreadedLengthMaxMm(underHeadLengthMm);
     const threadedLengthMm = clamp(
-      Number(inputSpec.threadedLengthMm) || underHeadLengthMm,
+      resolveNumericInput(inputSpec.threadedLengthMm, underHeadLengthMm),
       getFieldMin("threadedLengthMm"),
       threadedLengthMaxMm
     );
     const headHeightMm = clamp(
-      Number(inputSpec.headHeightMm) || getFieldDefault("headHeightMm"),
+      resolveNumericInput(inputSpec.headHeightMm, getFieldDefault("headHeightMm")),
       0.5,
       30
     );
     const headDiameterMm = clamp(
-      Number(inputSpec.headDiameterMm) || getFieldDefault("headDiameterMm") || nominalDiameterMm * 1.4,
+      resolveNumericInput(
+        inputSpec.headDiameterMm,
+        getFieldDefault("headDiameterMm") || nominalDiameterMm * 1.4
+      ),
       getHeadDiameterMinMm({ nominalDiameterMm, socket }),
       50
     );
     const tipChamferMm = clamp(
-      Number(inputSpec.tipChamferMm) || getFieldDefault("tipChamferMm"),
+      resolveNumericInput(inputSpec.tipChamferMm, getFieldDefault("tipChamferMm")),
       getFieldMin("tipChamferMm"),
       Math.min(underHeadLengthMm * 0.33, nominalDiameterMm * 0.5)
     );
     const pitchMm = clamp(
-      Number(inputSpec.pitchMm) || getFieldDefault("pitchMm"),
+      resolveNumericInput(inputSpec.pitchMm, getFieldDefault("pitchMm")),
       0.1,
       10
     );
     const socketDepthMm = clamp(
-      Number(inputSpec.socketDepthMm) || getFieldDefault("socketDepthMm"),
+      resolveNumericInput(inputSpec.socketDepthMm, getFieldDefault("socketDepthMm")),
       0.25,
       headHeightMm
     );
